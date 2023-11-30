@@ -1,13 +1,15 @@
 const express = require('express');
 const superagent = require('superagent');
+const cors = require('cors');
 const app = express();
 require('dotenv').config();
 app.use(express.json());
+app.use(cors());
 const baseUrl = "https://maps.googleapis.com/maps/api/";
 
 app.get('/find-placeid', async (req, res) => {
     try {
-        const response = await superagent(`${baseUrl}geocode/json?key=${process.env.GOOGLE_API_KEY}&address=${req.query.outcode}`);
+        const response = await superagent(`${baseUrl}geocode/json?key=${process.env.GOOGLE_API_KEY}&address=${req.query.postcode}`);
         res.send({ 
             success: true,
             placeId: response.body.results[0].place_id
@@ -22,8 +24,7 @@ app.get('/find-placeid', async (req, res) => {
 });
 
 app.post('/calculate-distance', async (req, res) => {
-    const placeId = req.body.placeId;
-    const practices = req.body.destinations;
+    const {placeId, practices} = req.body;
     try {
         const response = await superagent(`${baseUrl}distancematrix/json?key=${process.env.GOOGLE_API_KEY}&destinations=${practices}&origins=place_id:${placeId}&units=imperial`);
         const x = await response;
@@ -48,5 +49,5 @@ app.post('/calculate-distance', async (req, res) => {
         console.log(e)
     }
 });
-const port = process.env.port || 3000;
+const port = process.env.port || 8080;
 app.listen(port, () => console.log(`Listening on port ${port}`));
